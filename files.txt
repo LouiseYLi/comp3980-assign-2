@@ -1,3 +1,3 @@
 assign-2 src/main.c src/display.c src/convert.c include/display.h include/convert.h
-server src/server.c src/display.c include/display.h
-client src/client.c src/display.c include/display.h
+server src/server.c src/display.c src/convert.c  include/display.h include/convert.h
+client src/client.c src/display.c src/convert.c src/write.c src/read.c include/display.h include/convert.h include/write.h include/read.h fifo/input

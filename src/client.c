@@ -1,21 +1,27 @@
 #include "../include/display.h"
+#include "../include/read.h"
+#include "../include/write.h"
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
 
+#define FIFO_INPUT "./fifo/input"
+
 int main(int argc, char *argv[])
 {
-    const char *string;
-    const char *conversion;
-    int         option;
+    int option;
+    int fifoIn;
+    // int fifoOut;
 
-    const int TOTAL_ARGS = 5;
+    const int   TOTAL_ARGS = 5;
+    const char *string     = NULL;
+    const char *conversion = NULL;
     if(argc != TOTAL_ARGS)
     {
         perror("Error: invalid number of arguments.");
-        return EXIT_FAILURE;
+        exit(EXIT_FAILURE);
     }
 
     while((option = getopt(argc, argv, "s:c:")) != -1)
@@ -32,9 +38,24 @@ int main(int argc, char *argv[])
                 break;
             default:
                 perror("Error: invalid options.");
-                return EXIT_FAILURE;
+                exit(EXIT_FAILURE);
         }
     }
+    if(string == NULL || conversion == NULL)
+    {
+        perror("Error: error assigning arguments.");
+        exit(EXIT_FAILURE);
+    }
+
+    fifoIn = open(FIFO_INPUT, O_RDWR | O_CLOEXEC);
+    if(fifoIn == -1)
+    {
+        perror("Error: unable to open input fifo in client.");
+        exit(EXIT_FAILURE);
+    }
+
+    writeStr(fifoIn, string);
+    readStr(fifoIn, sizeof(string));
     // if (!string || !conversion) {
     //     perror("Error: ")
     // }
@@ -49,8 +70,6 @@ int main(int argc, char *argv[])
     //     return EXIT_SUCCESS;
     // }
 
-    // int fifoIn  = -1;
-    // int fifoOut = -1;
     // fifoIn      = open("fifo/input", O_RDONLY | O_CLOEXEC);
     // if(fifoIn == -1)
     // {
@@ -71,6 +90,9 @@ int main(int argc, char *argv[])
     //     return EXIT_FAILURE;
     // }
     // display("Hello, World");
+
     display("client ran successfully");
+    close(fifoIn);
+
     return EXIT_SUCCESS;
 }
