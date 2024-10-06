@@ -9,6 +9,8 @@
 
 #define FIFO_INPUT "./fifo/input"
 
+// #define FIFO_OUTPUT "./fifo/output"
+
 int main(int argc, char *argv[])
 {
     int option;
@@ -55,41 +57,6 @@ int main(int argc, char *argv[])
     }
 
     writeStr(fifoIn, string);
-    readStr(fifoIn, sizeof(string));
-    // if (!string || !conversion) {
-    //     perror("Error: ")
-    // }
-
-    // char c = '0';
-    // if(argc > 0)
-    // {
-    //     return EXIT_SUCCESS;
-    // }
-    // if(*(argv[0]) == c)
-    // {
-    //     return EXIT_SUCCESS;
-    // }
-
-    // fifoIn      = open("fifo/input", O_RDONLY | O_CLOEXEC);
-    // if(fifoIn == -1)
-    // {
-    //     perror("Error: error opening input fifo.");
-    //     return EXIT_FAILURE;
-    // }
-    // fifoOut = open("fifo/output", O_WRONLY | O_CLOEXEC);
-    // if(fifoOut == -1)
-    // {
-    //     close(fifoIn);
-    //     perror("Error: error opening output fifo.");
-    //     return EXIT_FAILURE;
-    // }
-
-    // if(close(fifoIn) == -1 || close(fifoOut) == -1)
-    // {
-    //     perror("Error: error closing file descriptor.");
-    //     return EXIT_FAILURE;
-    // }
-    // display("Hello, World");
 
     display("client ran successfully");
     close(fifoIn);
