@@ -6,6 +6,6 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-int readStr(int fifo);
+char readChar(int fifo);
 
 #endif

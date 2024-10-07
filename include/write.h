@@ -6,4 +6,6 @@
 
 int writeStr(int fifo, const char *buf);
 
+int writeChar(int fifo, char c);
+
 #endif

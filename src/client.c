@@ -1,3 +1,4 @@
+#include "../include/convert.h"
 #include "../include/display.h"
 #include "../include/read.h"
 #include "../include/write.h"
@@ -19,7 +20,7 @@ int main(int argc, char *argv[])
 
     const int   TOTAL_ARGS = 5;
     const char *string     = NULL;
-    const char *conversion = NULL;
+    char        conversion = ' ';
     if(argc != TOTAL_ARGS)
     {
         perror("Error: invalid number of arguments.");
@@ -35,15 +36,14 @@ int main(int argc, char *argv[])
                 display(string);
                 break;
             case 'c':
-                conversion = optarg;
-                display(conversion);
+                conversion = getConvertOption(optarg);
                 break;
             default:
                 perror("Error: invalid options.");
                 exit(EXIT_FAILURE);
         }
     }
-    if(string == NULL || conversion == NULL)
+    if(string == NULL || conversion == ' ')
     {
         perror("Error: error assigning arguments.");
         exit(EXIT_FAILURE);
@@ -55,7 +55,7 @@ int main(int argc, char *argv[])
         perror("Error: unable to open input fifo in client.");
         exit(EXIT_FAILURE);
     }
-
+    writeChar(fifoIn, conversion);
     writeStr(fifoIn, string);
 
     display("client ran successfully");

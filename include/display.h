@@ -9,6 +9,10 @@
 
 void display(const char *msg);
 
-void displaySize(size_t size);
+void displaySize(ssize_t size);
+
+void displayNum(int num);
+
+void displayChar(char c);
 
 #endif    // PROGRAMMING101_DISPLAY_H
