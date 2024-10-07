@@ -83,7 +83,7 @@ int main(int argc, char *argv[])
         displayChar(currentChar);
     }
 
-    display("client ran successfully");
+    display("\nclient ran successfully");
     close(fifoIn);
     close(fifoOut);
 

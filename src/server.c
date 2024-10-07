@@ -16,6 +16,16 @@
 typedef char (*convertChar)(char);
 
 static void *handle_client_request(void *arg);
+void         handle_signal(int signal);
+
+// NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
+static int terminate = 0;
+
+void handle_signal(int signal)
+{
+    signal    = 1;
+    terminate = signal;
+}
 
 static void *handle_client_request(void *arg)
 {
@@ -40,7 +50,7 @@ static void *handle_client_request(void *arg)
         perror("Error: error writing to fifo.");
         return NULL;
     }
-    while((currentChar = readChar(fds[0])) != EOF)
+    while(((currentChar = readChar(fds[0])) != EOF))
     {
         if(writeChar(fds[1], convertFunction(currentChar)) == -1)
         {
@@ -61,14 +71,13 @@ int main(void)
     int       fifoOut;
     pthread_t thread;
     int       fds[2];
-    const int MAX_ITS = 50;
-    int       counter = 0;
 
-    // if(signal(SIGINT, handle_signal) == SIG_ERR)
-    // {
-    //     perror("Error: setting up signal handler.");
-    //     exit(EXIT_FAILURE);
-    // }
+    if(signal(SIGINT, handle_signal) == SIG_ERR)
+    {
+        perror("Error: setting up signal handler.");
+        exit(EXIT_FAILURE);
+    }
+
     fifoIn = open(FIFO_INPUT, O_RDWR | O_CLOEXEC);
     if(fifoIn == -1)
     {
@@ -86,7 +95,7 @@ int main(void)
     fds[0] = fifoIn;
     fds[1] = fifoOut;
 
-    while(counter < MAX_ITS)    // need to do sigint
+    while(terminate == 0)
     {
         if(pthread_create(&thread, NULL, handle_client_request, (void *)fds) != 0)
         {
@@ -94,9 +103,12 @@ int main(void)
             continue;
         }
         pthread_join(thread, NULL);
-        ++counter;
     }
 
+    if(terminate == 1)
+    {
+        display("Signal received! Terminating...");
+    }
     display("server ran successfully");
 
     close(fifoIn);
