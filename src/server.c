@@ -20,17 +20,26 @@ static void *handle_client_request(void *arg);
 static void *handle_client_request(void *arg)
 {
     char        currentChar;
-    convertChar convertFunction;
     const int  *fds = (int *)arg;
-    displayNum(fds[0]);
-
-    convertFunction = checkConvertArgs(readChar(fds[0]));
+    char        c;
+    convertChar convertFunction;
+    c = readChar(fds[0]);
+    if(c == EOF)
+    {
+        perror("Error: reading from input FIFO");
+        return NULL;
+    }
+    convertFunction = checkConvertArgs(c);
     if(convertFunction == NULL)
     {
         perror("Error: convert type arguments");
         return NULL;
     }
-
+    if(writeChar(fds[1], convertFunction(c)) == -1)
+    {
+        perror("Error: error writing to fifo.");
+        return NULL;
+    }
     while((currentChar = readChar(fds[0])) != EOF)
     {
         if(writeChar(fds[1], convertFunction(currentChar)) == -1)
@@ -38,17 +47,19 @@ static void *handle_client_request(void *arg)
             perror("Error: error writing to fifo.");
             return NULL;
         }
+        if(currentChar == '\0')
+        {
+            break;
+        }
     }
     return NULL;
 }
 
 int main(void)
 {
-    int fifoIn;
-    int fifoOut;
-    // char     *buf;
+    int       fifoIn;
+    int       fifoOut;
     pthread_t thread;
-    // const int TOTAL_FDS = 2;
     int       fds[2];
     const int MAX_ITS = 50;
     int       counter = 0;
@@ -75,7 +86,7 @@ int main(void)
     fds[0] = fifoIn;
     fds[1] = fifoOut;
 
-    while(counter < MAX_ITS)
+    while(counter < MAX_ITS)    // need to do sigint
     {
         if(pthread_create(&thread, NULL, handle_client_request, (void *)fds) != 0)
         {
@@ -85,13 +96,10 @@ int main(void)
         pthread_join(thread, NULL);
         ++counter;
     }
-    //     buf = readStr(fifoIn);
-    // display(buf);
 
-    // display("server ran successfully");
+    display("server ran successfully");
 
     close(fifoIn);
     close(fifoOut);
-    // free(buf);
     return EXIT_SUCCESS;
 }

@@ -61,6 +61,9 @@ char readChar(int fifo)
     {
         return EOF;
     }
-    displayChar(c);
+    if(c == '\0')
+    {
+        return c;
+    }
     return c;
 }

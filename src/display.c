@@ -17,5 +17,5 @@ void displayNum(int num)
 
 void displayChar(char c)
 {
-    printf("%c\n", c);
+    printf("%c", c);
 }
