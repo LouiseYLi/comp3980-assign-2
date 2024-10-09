@@ -20,7 +20,7 @@ int main(int argc, char *argv[])
 
     int         retval     = EXIT_SUCCESS;
     const int   TOTAL_ARGS = 5;
-    const char *string     = NULL;
+    const char *message    = NULL;
     char        conversion = ' ';
     if(argc != TOTAL_ARGS)
     {
@@ -34,7 +34,7 @@ int main(int argc, char *argv[])
         switch(option)
         {
             case 's':
-                string = optarg;
+                message = optarg;
                 break;
             case 'c':
                 conversion = getConvertOption(optarg);
@@ -45,7 +45,7 @@ int main(int argc, char *argv[])
                 goto done;
         }
     }
-    if(string == NULL || conversion == ' ')
+    if(message == NULL || conversion == ' ')
     {
         perror("Error: error assigning arguments.");
         retval = EXIT_FAILURE;
@@ -69,7 +69,7 @@ int main(int argc, char *argv[])
     }
 
     writeChar(fifoIn, conversion);
-    writeStr(fifoIn, string);
+    writeStr(fifoIn, message);
     writeChar(fifoIn, '\0');
 
     while((currentChar = readChar(fifoOut)) != EOF)
