@@ -35,8 +35,10 @@ struct clientData
 
 void handleSignal(int signal)
 {
-    signal    = 1;
-    terminate = signal;
+    if(signal == SIGINT)
+    {
+        terminate = 1;
+    }
 }
 
 static void *handleClientRequest(void *arg)
