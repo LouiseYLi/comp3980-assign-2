@@ -15,30 +15,35 @@
 
 typedef char (*convertChar)(char);
 
-static void *handle_client_request(void *arg);
-void         handle_signal(int signal);
+static void *handleClientRequest(void *arg);
+void         handleSignal(int signal);
 
+// Here I ignored the warning for terminate because I wanted
+//  terminate to act as a global flag for handling SIGINT.
+//  I couldn't think of an alternative to not using a
+//  non-constant global flag that also avoids compiler
+//  warnings.
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 static int terminate = 0;
 
-struct client_data
+struct clientData
 {
     int  fifoIn;
     int  fifoOut;
     char conversion;
 };
 
-void handle_signal(int signal)
+void handleSignal(int signal)
 {
     signal    = 1;
     terminate = signal;
 }
 
-static void *handle_client_request(void *arg)
+static void *handleClientRequest(void *arg)
 {
-    const struct client_data *data = (struct client_data *)arg;
-    convertChar               convertFunction;
-    char                      currentChar;
+    const struct clientData *data = (struct clientData *)arg;
+    convertChar              convertFunction;
+    char                     currentChar;
     convertFunction = checkConvertArgs(data->conversion);
     if(convertFunction == NULL)
     {
@@ -62,14 +67,14 @@ static void *handle_client_request(void *arg)
 
 int main(void)
 {
-    struct client_data data;
-    int                fifoIn;
-    int                fifoOut;
-    pthread_t          thread;
+    struct clientData data;
+    int               fifoIn;
+    int               fifoOut;
+    pthread_t         thread;
 
     int retval = EXIT_SUCCESS;
 
-    if(signal(SIGINT, handle_signal) == SIG_ERR)
+    if(signal(SIGINT, handleSignal) == SIG_ERR)
     {
         perror("Error: setting up signal handler.");
         retval = EXIT_FAILURE;
@@ -102,7 +107,7 @@ int main(void)
         if(conversion != EOF)
         {
             data.conversion = conversion;
-            if(pthread_create(&thread, NULL, handle_client_request, (void *)&data) != 0)
+            if(pthread_create(&thread, NULL, handleClientRequest, (void *)&data) != 0)
             {
                 perror("Error: creating thread");
                 retval = EXIT_FAILURE;
