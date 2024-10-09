@@ -11,8 +11,6 @@
 #define FIFO_INPUT "./fifo/input"
 #define FIFO_OUTPUT "./fifo/output"
 
-// #define FIFO_OUTPUT "./fifo/output"
-
 int main(int argc, char *argv[])
 {
     int  option;
@@ -20,13 +18,15 @@ int main(int argc, char *argv[])
     int  fifoOut;
     char currentChar;
 
+    int         retval     = EXIT_SUCCESS;
     const int   TOTAL_ARGS = 5;
     const char *string     = NULL;
     char        conversion = ' ';
     if(argc != TOTAL_ARGS)
     {
         perror("Error: invalid number of arguments.");
-        exit(EXIT_FAILURE);
+        retval = EXIT_FAILURE;
+        goto done;
     }
 
     while((option = getopt(argc, argv, "s:c:")) != -1)
@@ -41,27 +41,31 @@ int main(int argc, char *argv[])
                 break;
             default:
                 perror("Error: invalid options.");
-                exit(EXIT_FAILURE);
+                retval = EXIT_FAILURE;
+                goto done;
         }
     }
     if(string == NULL || conversion == ' ')
     {
         perror("Error: error assigning arguments.");
-        exit(EXIT_FAILURE);
+        retval = EXIT_FAILURE;
+        goto done;
     }
 
     fifoIn = open(FIFO_INPUT, O_RDWR | O_CLOEXEC);
     if(fifoIn == -1)
     {
         perror("Error: unable to open input fifo in client.");
-        exit(EXIT_FAILURE);
+        retval = EXIT_FAILURE;
+        goto done;
     }
     fifoOut = open(FIFO_OUTPUT, O_RDWR | O_CLOEXEC);
     if(fifoOut == -1)
     {
         perror("Error: unable to open output fifo in client.");
         close(fifoIn);
-        exit(EXIT_FAILURE);
+        retval = EXIT_FAILURE;
+        goto done;
     }
 
     writeChar(fifoIn, conversion);
@@ -78,8 +82,9 @@ int main(int argc, char *argv[])
     }
 
     display("\nclient ran successfully");
+
     close(fifoIn);
     close(fifoOut);
-
-    return EXIT_SUCCESS;
+done:
+    return retval;
 }
