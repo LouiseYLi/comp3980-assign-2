@@ -20,10 +20,9 @@ int main(int argc, char *argv[])
     int  fifoOut;
     char currentChar;
 
-    const int   TOTAL_ARGS    = 5;
-    const char *string        = NULL;
-    char        conversion    = ' ';
-    int         blockExecuted = 0;
+    const int   TOTAL_ARGS = 5;
+    const char *string     = NULL;
+    char        conversion = ' ';
     if(argc != TOTAL_ARGS)
     {
         perror("Error: invalid number of arguments.");
@@ -71,11 +70,6 @@ int main(int argc, char *argv[])
 
     while((currentChar = readChar(fifoOut)) != EOF)
     {
-        if(blockExecuted == 0)
-        {
-            blockExecuted = 1;
-            continue;
-        }
         if(currentChar == '\0')
         {
             break;

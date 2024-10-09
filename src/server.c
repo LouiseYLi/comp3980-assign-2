@@ -21,6 +21,13 @@ void         handle_signal(int signal);
 // NOLINTNEXTLINE(cppcoreguidelines-avoid-non-const-global-variables)
 static int terminate = 0;
 
+struct client_data
+{
+    int  fifoIn;
+    int  fifoOut;
+    char conversion;
+};
+
 void handle_signal(int signal)
 {
     signal    = 1;
@@ -29,30 +36,18 @@ void handle_signal(int signal)
 
 static void *handle_client_request(void *arg)
 {
-    char        currentChar;
-    const int  *fds = (int *)arg;
-    char        c;
-    convertChar convertFunction;
-    c = readChar(fds[0]);
-    if(c == EOF)
-    {
-        perror("Error: reading from input FIFO");
-        return NULL;
-    }
-    convertFunction = checkConvertArgs(c);
+    const struct client_data *data = (struct client_data *)arg;
+    convertChar               convertFunction;
+    char                      currentChar;
+    convertFunction = checkConvertArgs(data->conversion);
     if(convertFunction == NULL)
     {
-        perror("Error: convert type arguments");
+        perror("Error: obtaining specific convert function");
         return NULL;
     }
-    if(writeChar(fds[1], convertFunction(c)) == -1)
+    while((currentChar = readChar(data->fifoIn)) != EOF)
     {
-        perror("Error: error writing to fifo.");
-        return NULL;
-    }
-    while(((currentChar = readChar(fds[0])) != EOF))
-    {
-        if(writeChar(fds[1], convertFunction(currentChar)) == -1)
+        if(writeChar(data->fifoOut, convertFunction(currentChar)) == -1)
         {
             perror("Error: error writing to fifo.");
             return NULL;
@@ -67,42 +62,59 @@ static void *handle_client_request(void *arg)
 
 int main(void)
 {
-    int       fifoIn;
-    int       fifoOut;
-    pthread_t thread;
-    int       fds[2];
+    struct client_data data;
+    int                fifoIn;
+    int                fifoOut;
+    pthread_t          thread;
+
+    int retval = EXIT_SUCCESS;
 
     if(signal(SIGINT, handle_signal) == SIG_ERR)
     {
         perror("Error: setting up signal handler.");
-        exit(EXIT_FAILURE);
+        retval = EXIT_FAILURE;
+        goto done;
     }
 
     fifoIn = open(FIFO_INPUT, O_RDWR | O_CLOEXEC);
     if(fifoIn == -1)
     {
         perror("Error: unable to open input fifo in client.");
-        exit(EXIT_FAILURE);
+        retval = EXIT_FAILURE;
+        goto done;
     }
     fifoOut = open(FIFO_OUTPUT, O_RDWR | O_CLOEXEC);
     if(fifoOut == -1)
     {
         close(fifoIn);
         perror("Error: unable to open input fifo in client.");
-        exit(EXIT_FAILURE);
+        retval = EXIT_FAILURE;
+        goto done;
     }
 
-    fds[0] = fifoIn;
-    fds[1] = fifoOut;
+    data.fifoIn  = fifoIn;
+    data.fifoOut = fifoOut;
 
     while(terminate == 0)
     {
-        if(pthread_create(&thread, NULL, handle_client_request, (void *)fds) != 0)
+        char conversion;
+        conversion = readChar(data.fifoIn);
+        if(conversion != EOF)
         {
-            perror("Error: creating thread");
-            continue;
+            data.conversion = conversion;
+            if(pthread_create(&thread, NULL, handle_client_request, (void *)&data) != 0)
+            {
+                perror("Error: creating thread");
+                retval = EXIT_FAILURE;
+                goto cleanup;
+            }
+            if(pthread_join(thread, NULL) != 0)
+            {
+                perror("Error: pthread_join in server.");
+                retval = EXIT_FAILURE;
+                goto cleanup;
+            }
         }
-        pthread_join(thread, NULL);
     }
 
     if(terminate == 1)
@@ -110,8 +122,9 @@ int main(void)
         display("Signal received! Terminating...");
     }
     display("server ran successfully");
-
+cleanup:
     close(fifoIn);
     close(fifoOut);
-    return EXIT_SUCCESS;
+done:
+    return retval;
 }
